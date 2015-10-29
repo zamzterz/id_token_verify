@@ -6,7 +6,7 @@ The web service can be run using any WSGI HTTP Server, for example using `gunico
     pip install -r requirements.txt
     gunicorn id_token_verify.service:app
     
-The web service expects an HTTP POST request containing the following parameters
+The web service expects an HTTP POST request containing the following parameters:
  
    * `token` (REQUIRED) the ID Token to verify and unpack
    * `key` (OPTIONAL) symmetric key (client secret), if the ID Token was signed using symmetric key cryptography
