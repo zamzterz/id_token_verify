@@ -82,3 +82,13 @@ def test_fail_when_cant_fetch_provider_jwks_uri(id_token, rsa_key):
 
     with pytest.raises(IDTokenVerificationError):
         verify(jwt)
+
+
+@responses.activate
+def test_fail_when_cant_fetch_provider_configuration(id_token, rsa_key):
+    # fake ConnectionError for the Provider Configuration endpoint
+    responses.add(responses.GET, OIDCONF_PATTERN % ISSUER, body=ConnectionError('Error'))
+
+    jwt = id_token.to_jwt([rsa_key], 'RS256')
+    with pytest.raises(IDTokenVerificationError):
+        verify(jwt)

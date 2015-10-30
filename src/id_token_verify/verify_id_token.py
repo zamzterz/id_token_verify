@@ -45,8 +45,11 @@ def verify(token, key=None, jwks=None):
 
 
 def _fetch_provider_keys(issuer):
-    provider_config = ProviderConfigurationResponse(
-        **requests.get(OIDCONF_PATTERN % issuer).json())
+    try:
+        provider_config = ProviderConfigurationResponse(
+            **requests.get(OIDCONF_PATTERN % issuer).json())
+    except requests.exceptions.RequestException:
+        raise IDTokenVerificationError('The providers configuration could not be fetched.')
     assert issuer == provider_config['issuer']
 
     provider_keys = KeyJar()
