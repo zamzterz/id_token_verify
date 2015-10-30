@@ -1,5 +1,7 @@
 from io import StringIO
+import json
 from urllib.parse import urlencode
+from oic.oauth2 import rndstr
 
 from oic.oic.message import IdToken
 
@@ -17,8 +19,7 @@ def assert_wrong_http_method_response(status, headers):
 
 
 def test_service(id_token):
-    jwt = id_token.to_jwt()
-    data = urlencode({'token': jwt})
+    data = urlencode({'token': id_token.to_jwt()})
     environ = {'REQUEST_METHOD': 'POST', 'CONTENT_LENGTH': len(data), 'wsgi.input': StringIO(data)}
     result = app(environ, assert_successful_response)
     assert IdToken().from_json(result[0].decode("utf-8")) == id_token
@@ -27,3 +28,14 @@ def test_service(id_token):
 def test_wrong_http_method():
     environ = {'REQUEST_METHOD': 'GET'}
     app(environ, assert_wrong_http_method_response)
+
+
+def test_wrong_signature(id_token, rsa_key):
+    # sign with RSA key, but pass random symmetric key
+    data = urlencode({'token': id_token.to_jwt([rsa_key], 'RS256'),
+                      'key': rndstr()})
+
+    environ = {'REQUEST_METHOD': 'POST', 'CONTENT_LENGTH': len(data), 'wsgi.input': StringIO(data)}
+    result = app(environ, assert_successful_response)
+    error_msg = json.loads(result[0].decode("utf-8"))
+    assert 'error' in error_msg

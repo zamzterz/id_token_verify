@@ -1,9 +1,10 @@
+import json
 from urllib.parse import parse_qsl
 from wsgiref.simple_server import make_server
 
 from oic.utils.http_util import get_post
 
-from id_token_verify.verify_id_token import verify
+from id_token_verify.verify_id_token import verify, IDTokenVerificationError
 
 
 def app(environ, start_response):
@@ -13,8 +14,13 @@ def app(environ, start_response):
 
     post_data = get_post(environ)
     parsed_data = dict(parse_qsl(post_data))
-    verified_token = verify(**parsed_data)
+
     start_response('200 OK', [('Content-Type', 'application/json')])
+    try:
+        verified_token = verify(**parsed_data)
+    except IDTokenVerificationError as e:
+        return [json.dumps({"error": str(e)}).encode('utf-8')]
+
     return [verified_token.encode('utf-8')]
 
 
