@@ -1,6 +1,7 @@
 # pylint: disable=no-member, missing-docstring
 
 import json
+
 from oic.oauth2 import rndstr
 
 from oic.oic import OIDCONF_PATTERN
@@ -46,8 +47,15 @@ def test_verify_jwt_signed_with_symmetric_key(id_token, sym_key):
     assert IdToken().from_json(unpacked) == id_token
 
 
-def test_fail_verify_on_wrong_key(id_token, rsa_key):
+def test_fail_verify_on_wrong_key_type(id_token, rsa_key):
     jwt = id_token.to_jwt([rsa_key], 'RS256')
+
+    with pytest.raises(IDTokenVerificationError):
+        verify(jwt, key=rndstr())  # pass random symmetric key and expect failure
+
+
+def test_fail_verify_on_wrong_key(id_token, sym_key):
+    jwt = id_token.to_jwt([sym_key], 'HS256')
 
     with pytest.raises(IDTokenVerificationError):
         verify(jwt, key=rndstr())  # pass random symmetric key and expect failure

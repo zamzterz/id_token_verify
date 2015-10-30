@@ -1,5 +1,7 @@
 import json
 
+from jwkest import BadSignature
+
 from jwkest.jwk import SYMKey
 from jwkest.jws import NoSuitableSigningKeys
 from jwkest.jwt import JWT
@@ -32,7 +34,7 @@ def verify(token, key=None, jwks=None):
 
     try:
         return IdToken().from_jwt(token, keyjar=provider_keys).to_json()
-    except NoSuitableSigningKeys as e:
+    except (BadSignature, NoSuitableSigningKeys) as e:
         raise IDTokenVerificationError(
             'No key that could be used to verify the signature could be found.')
 
