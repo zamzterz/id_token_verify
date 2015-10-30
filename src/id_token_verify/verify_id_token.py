@@ -1,11 +1,16 @@
 import json
 
 from jwkest.jwk import SYMKey
+from jwkest.jws import NoSuitableSigningKeys
 from jwkest.jwt import JWT
 from oic.oic import OIDCONF_PATTERN
 from oic.oic.message import IdToken, ProviderConfigurationResponse
 from oic.utils.keyio import KeyJar, KeyBundle
 import requests
+
+
+class IDTokenVerificationError(Exception):
+    pass
 
 
 def verify(token, key=None, jwks=None):
@@ -25,7 +30,11 @@ def verify(token, key=None, jwks=None):
     elif jwt.headers['alg'] != 'none':  # don't fetch keys for unsigned JWT
         provider_keys = _fetch_provider_keys(issuer)
 
-    return IdToken().from_jwt(token, keyjar=provider_keys).to_json()
+    try:
+        return IdToken().from_jwt(token, keyjar=provider_keys).to_json()
+    except NoSuitableSigningKeys as e:
+        raise IDTokenVerificationError(
+            'No key that could be used to verify the signature could be found.')
 
 
 def _fetch_provider_keys(issuer):
