@@ -21,6 +21,11 @@ def verify(token, key=None, jwks=None):
     issuer = payload['iss']
     provider_keys = None
 
+    if jwt.headers['alg'].startswith('HS') and not key:
+        raise IDTokenVerificationError(
+            'No symmetric key provided for signature using \'{}\' algorithm.'.format(
+                jwt.headers['alg']))
+
     if key:
         provider_keys = KeyJar()
         key = SYMKey(use='sig', k=key)

@@ -59,3 +59,10 @@ def test_fail_verify_on_wrong_key(id_token, sym_key):
 
     with pytest.raises(IDTokenVerificationError):
         verify(jwt, key=rndstr())  # pass random symmetric key and expect failure
+
+
+def test_fail_on_symmetric_key_signature_but_key_not_provided(id_token, sym_key):
+    jwt = id_token.to_jwt([sym_key], 'HS256')
+
+    with pytest.raises(IDTokenVerificationError):
+        verify(jwt)  # don't pass symmetric key
