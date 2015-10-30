@@ -1,3 +1,5 @@
+# OpenID Connect ID Token verification service
+
 Simple library for verifying signed OpenID Connect ID Tokens.
 The library includes a simple WSGI app that can be run as a web service accepting tokens for verification.
  
