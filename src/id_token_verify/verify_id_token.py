@@ -27,11 +27,7 @@ def verify_signed_id_token(token, key=None, jwks=None):
                 jwt.headers['alg']))
 
     if key:
-        provider_keys = KeyJar()
-        key = SYMKey(use='sig', k=key)
-        kb = KeyBundle(keytype='oct')
-        kb.append(key)
-        provider_keys[issuer] = [kb]
+        provider_keys = _create_symmetric_key(issuer, key)
     elif jwks:
         provider_keys = _parse_provider_keys_from_jwks(issuer, jwks)
     elif jwt.headers['alg'] != 'none':  # don't fetch keys for unsigned JWT
@@ -67,4 +63,14 @@ def _parse_provider_keys_from_jwks(issuer, jwks):
     keys = json.loads(jwks)['keys']
     provider_keys = KeyJar()
     provider_keys[issuer] = [KeyBundle(keys=keys)]
+    return provider_keys
+
+
+def _create_symmetric_key(issuer, key):
+    provider_keys = KeyJar()
+    key = SYMKey(use='sig', k=key)
+    kb = KeyBundle(keytype='oct')
+    kb.append(key)
+    provider_keys[issuer] = [kb]
+
     return provider_keys
