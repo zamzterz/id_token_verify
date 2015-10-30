@@ -46,7 +46,10 @@ def _fetch_provider_keys(issuer):
             **requests.get(OIDCONF_PATTERN % issuer).json())
     except requests.exceptions.RequestException:
         raise IDTokenVerificationError('The providers configuration could not be fetched.')
-    assert issuer == provider_config['issuer']
+
+    if issuer != provider_config['issuer']:
+        raise IDTokenVerificationError(
+            'Issuer in provider configuration does not match issuer of ID Token.')
 
     provider_keys = KeyJar()
     keybundle = provider_keys.add(issuer, provider_config['jwks_uri'])
