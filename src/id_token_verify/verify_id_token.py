@@ -50,7 +50,13 @@ def _fetch_provider_keys(issuer):
     assert issuer == provider_config['issuer']
 
     provider_keys = KeyJar()
-    provider_keys.add(issuer, provider_config['jwks_uri'])
+    keybundle = provider_keys.add(issuer, provider_config['jwks_uri'])
+
+    try:
+        keybundle.update()  # force fetch of remote keys from jwks_uri
+    except requests.exceptions.RequestException:
+        raise IDTokenVerificationError('Keys could not be fetched from the providers \'jwks_uri\'.')
+
     return provider_keys
 
 
