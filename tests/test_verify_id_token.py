@@ -10,7 +10,7 @@ import pytest
 from requests.exceptions import ConnectionError
 import responses
 
-from id_token_verify.verify_id_token import verify, IDTokenVerificationError
+from id_token_verify.verify_id_token import verify_signed_id_token, IDTokenVerificationError
 from conftest import ISSUER
 
 
@@ -24,27 +24,27 @@ def test_verify_with_issuer_keys(id_token, rsa_key):
 
     jwt = id_token.to_jwt([rsa_key], 'RS256')
 
-    unpacked = verify(jwt)
+    unpacked = verify_signed_id_token(jwt)
     assert IdToken().from_json(unpacked) == id_token
 
 
 def test_verify_with_provided_jwks(id_token, rsa_key):  # for provider not supporting discovery
     jwt = id_token.to_jwt([rsa_key], 'RS256')
 
-    unpacked = verify(jwt, jwks=json.dumps({'keys': [rsa_key.serialize()]}))
+    unpacked = verify_signed_id_token(jwt, jwks=json.dumps({'keys': [rsa_key.serialize()]}))
     assert IdToken().from_json(unpacked) == id_token
 
 
 def test_verify_unsigned_jwt(id_token):
     jwt = id_token.to_jwt()
-    unpacked = verify(jwt)
+    unpacked = verify_signed_id_token(jwt)
     assert IdToken().from_json(unpacked) == id_token
 
 
 def test_verify_jwt_signed_with_symmetric_key(id_token, sym_key):
     jwt = id_token.to_jwt([sym_key], 'HS256')
 
-    unpacked = verify(jwt, key=sym_key.k)
+    unpacked = verify_signed_id_token(jwt, key=sym_key.k)
     assert IdToken().from_json(unpacked) == id_token
 
 
@@ -52,21 +52,21 @@ def test_fail_verify_on_wrong_key_type(id_token, rsa_key):
     jwt = id_token.to_jwt([rsa_key], 'RS256')
 
     with pytest.raises(IDTokenVerificationError):
-        verify(jwt, key=rndstr())  # pass random symmetric key and expect failure
+        verify_signed_id_token(jwt, key=rndstr())  # pass random symmetric key and expect failure
 
 
 def test_fail_verify_on_wrong_key(id_token, sym_key):
     jwt = id_token.to_jwt([sym_key], 'HS256')
 
     with pytest.raises(IDTokenVerificationError):
-        verify(jwt, key=rndstr())  # pass random symmetric key and expect failure
+        verify_signed_id_token(jwt, key=rndstr())  # pass random symmetric key and expect failure
 
 
 def test_fail_on_symmetric_key_signature_but_key_not_provided(id_token, sym_key):
     jwt = id_token.to_jwt([sym_key], 'HS256')
 
     with pytest.raises(IDTokenVerificationError):
-        verify(jwt)  # don't pass symmetric key
+        verify_signed_id_token(jwt)  # don't pass symmetric key
 
 
 @responses.activate
@@ -81,7 +81,7 @@ def test_fail_when_cant_fetch_provider_jwks_uri(id_token, rsa_key):
     jwt = id_token.to_jwt([rsa_key], 'RS256')
 
     with pytest.raises(IDTokenVerificationError):
-        verify(jwt)
+        verify_signed_id_token(jwt)
 
 
 @responses.activate
@@ -91,4 +91,4 @@ def test_fail_when_cant_fetch_provider_configuration(id_token, rsa_key):
 
     jwt = id_token.to_jwt([rsa_key], 'RS256')
     with pytest.raises(IDTokenVerificationError):
-        verify(jwt)
+        verify_signed_id_token(jwt)

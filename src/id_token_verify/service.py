@@ -4,7 +4,7 @@ from wsgiref.simple_server import make_server
 
 from oic.utils.http_util import get_post
 
-from id_token_verify.verify_id_token import verify, IDTokenVerificationError
+from id_token_verify.verify_id_token import verify_signed_id_token, IDTokenVerificationError
 
 
 def app(environ, start_response):
@@ -17,7 +17,7 @@ def app(environ, start_response):
 
     start_response('200 OK', [('Content-Type', 'application/json')])
     try:
-        verified_token = verify(**parsed_data)
+        verified_token = verify_signed_id_token(**parsed_data)
     except IDTokenVerificationError as e:
         return [json.dumps({"error": str(e)}).encode('utf-8')]
 

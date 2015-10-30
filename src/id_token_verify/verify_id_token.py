@@ -15,7 +15,7 @@ class IDTokenVerificationError(Exception):
     pass
 
 
-def verify(token, key=None, jwks=None):
+def verify_signed_id_token(token, key=None, jwks=None):
     jwt = JWT().unpack(token)
     payload = jwt.payload()
     issuer = payload['iss']
